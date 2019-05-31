@@ -22,6 +22,7 @@ socksServer2Port=8090           # the port to attempt connect to (from the PriFi
                                 # notes : see <https://github.com/dedis/prifi/blob/master/README_architecture.md>
 
 all_localhost_n_clients=3      # number of clients to start in the "all-localhost" script
+all_localhost_n_trustees=1      # number of trustees to start in the "all-localhost" script
 
 # default file names :
 
@@ -264,11 +265,15 @@ case $1 in
 
 		sleep "$sleeptime_between_spawns"
 
-		echo -n "Starting trustee 0...			"
-		"$thisScript" trustee 0 > trustee0.log 2>&1 &
-		echo -e "$okMsg"
+		for i in `seq 0 $(($all_localhost_n_trustees - 1))`
+		do
+			echo -n "Starting trustee $i...			"
 
-		sleep "$sleeptime_between_spawns"
+			"$thisScript" trustee $i > "trustee$i.log" 2>&1 &
+			echo -e "$okMsg"
+			sleep "$sleeptime_between_spawns"
+
+		done
 
 		for i in `seq 0 $(($all_localhost_n_clients - 1))`
 		do
