@@ -90,6 +90,7 @@ type TrusteeState struct {
 	AlwaysSlowDown                bool //enforce the sleep in the sending function even if rate is FULL
 	NeverSlowDown                 bool //ignore the sleep in the sending function if rate is STOPPED
 	EquivocationProtectionEnabled bool
+	SupertrusteeEnabled           bool
 }
 
 // NeffShuffleResult holds the result of the NeffShuffle,

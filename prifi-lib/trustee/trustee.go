@@ -55,6 +55,7 @@ func (p *PriFiLibTrusteeInstance) Received_ALL_ALL_PARAMETERS(msg net.ALL_ALL_PA
 	payloadSize := msg.IntValueOrElse("PayloadSize", p.trusteeState.PayloadSize)
 	dcNetType := msg.StringValueOrElse("DCNetType", "not initilaized")
 	equivProtection := msg.BoolValueOrElse("EquivocationProtectionEnabled", false)
+	supertrusteeEnabled := msg.BoolValueOrElse("SupertrusteeEnabled", false)
 
 	//sanity checks
 	if trusteeID < -1 {
@@ -83,6 +84,7 @@ func (p *PriFiLibTrusteeInstance) Received_ALL_ALL_PARAMETERS(msg net.ALL_ALL_PA
 	p.trusteeState.TrusteeID = trusteeID
 	p.trusteeState.EquivocationProtectionEnabled = equivProtection
 	p.trusteeState.neffShuffle.Init(trusteeID, p.trusteeState.privateKey, p.trusteeState.PublicKey)
+	p.trusteeState.SupertrusteeEnabled = supertrusteeEnabled
 
 	//placeholders for pubkeys and secrets
 	p.trusteeState.ClientPublicKeys = make([]kyber.Point, nClients)

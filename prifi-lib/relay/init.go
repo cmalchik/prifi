@@ -166,6 +166,7 @@ type RelayState struct {
 	TrusteeCacheLowBound                   int // Number of ciphertexts buffered by trustees. When <= TRUSTEE_CACHE_LOWBOUND, resume sending
 	TrusteeCacheHighBound                  int // Number of ciphertexts buffered by trustees. When >= TRUSTEE_CACHE_HIGHBOUND, stop sending
 	EquivocationProtectionEnabled          bool
+	SupertrusteeEnabled                    bool
 
 	// sync
 	processingLock sync.Mutex // either we treat a message, or a timeout, never both

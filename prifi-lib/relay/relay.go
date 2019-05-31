@@ -103,6 +103,7 @@ func (p *PriFiLibRelayInstance) Received_ALL_ALL_PARAMETERS(msg net.ALL_ALL_PARA
 	trusteeCacheLowBound := msg.IntValueOrElse("RelayTrusteeCacheLowBound", p.relayState.TrusteeCacheLowBound)
 	trusteeCacheHighBound := msg.IntValueOrElse("RelayTrusteeCacheHighBound", p.relayState.TrusteeCacheHighBound)
 	equivocationProtectionEnabled := msg.BoolValueOrElse("EquivocationProtectionEnabled", p.relayState.EquivocationProtectionEnabled)
+	supertrusteeEnabled := msg.BoolValueOrElse("SupertrusteeEnabled", p.relayState.SupertrusteeEnabled)
 
 	if payloadSize < 1 {
 		return errors.New("payloadSize cannot be 0")
@@ -141,6 +142,7 @@ func (p *PriFiLibRelayInstance) Received_ALL_ALL_PARAMETERS(msg net.ALL_ALL_PARA
 	p.relayState.trusteeBitMap = make(map[int]map[int]int)
 	p.relayState.blamingData = make([]int, 6)
 	p.relayState.OpenClosedSlotsRequestsRoundID = make(map[int32]bool)
+	p.relayState.SupertrusteeEnabled = supertrusteeEnabled
 
 	switch dcNetType {
 	case "Verifiable":
@@ -192,6 +194,7 @@ func (p *PriFiLibRelayInstance) BroadcastParameters() error {
 	msg.Add("DCNetType", p.relayState.dcNetType)
 	msg.Add("DisruptionProtectionEnabled", p.relayState.DisruptionProtectionEnabled)
 	msg.Add("EquivocationProtectionEnabled", p.relayState.EquivocationProtectionEnabled)
+	msg.Add("SupertrusteeEnabled", p.relayState.SupertrusteeEnabled)
 	msg.ForceParams = true
 
 	// Send those parameters to all trustees
