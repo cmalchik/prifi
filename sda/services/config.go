@@ -75,6 +75,18 @@ func (s *ServiceState) setConfigToPriFiProtocol(wrapper *prifi_protocol.PriFiSDA
 	if s.role == prifi_protocol.Relay {
 		identitiesMap = s.churnHandler.createIdentitiesMap()
 	}
+	//trustees need to know eachother for supertrustee functionality
+	//TODO: may not be needed if the supertrustee is configured
+	//over the network
+	if s.role == prifi_protocol.Trustee {
+		for i, v := range s.trusteeIDs {
+			identitiesMap[idFromServerIdentity(v)] = prifi_protocol.PriFiIdentity{
+				Role:     prifi_protocol.Trustee,
+				ID:       i,
+				ServerID: v,
+			}
+		}
+	}
 
 	configMsg := &prifi_protocol.PriFiSDAWrapperConfig{
 		Toml:       s.prifiTomlConfig,

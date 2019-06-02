@@ -136,6 +136,10 @@ func (p *PriFiLibTrusteeInstance) ReceivedMessage(msg interface{}) error {
 			log.Fatal("not implemented")
 			//err = p.Received_REL_ALL_SECRET(typedMsg)
 		}
+	case net.TRU_REL_DC_CIPHER:
+		if p.stateMachine.AssertState("READY") {
+			err = p.Received_TRU_REL_DC_CIPHER(typedMsg)
+		}
 	default:
 		err = errors.New("Unrecognized message, type" + reflect.TypeOf(msg).String())
 	}

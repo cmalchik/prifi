@@ -11,6 +11,7 @@ Then, this file simple handle the answer to the different message kind :
 - REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE - the client's identities (and ephemeral ones), and a base. We react by Neff-Shuffling and sending the result
 - REL_TRU_TELL_TRANSCRIPT - the Neff-Shuffle's results. We perform some checks, sign the last one, send it to the relay, and follow by continuously sending ciphers.
 - REL_TRU_TELL_RATE_CHANGE - Received when the relay requests a sending rate change, the message contains the necessary information needed to perform this change
+- TRU_REL_DC_CIPHER - data for the DC-net; only received if trustee is supertrustee
 */
 
 import (
@@ -191,10 +192,12 @@ func (p *PriFiLibTrusteeInstance) Received_REL_TRU_TELL_RATE_CHANGE(msg net.REL_
 }
 
 /*
-sendData is an auxiliary function used by Send_TRU_REL_DC_CIPHER. It computes the DC-net's cipher and sends it.
+sendData is an auxiliary function used by Send_TRU_REL_DC_CIPHER. It
+computes the DC-net's cipher and sends it to the relay (or supertrustee)
 It returns the new round number (previous + 1).
 */
 func sendData(p *PriFiLibTrusteeInstance, roundID int32) (int32, error) {
+	var ok bool
 	data := p.trusteeState.DCNet.TrusteeEncodeForRound(roundID)
 
 	//send the data
@@ -202,7 +205,14 @@ func sendData(p *PriFiLibTrusteeInstance, roundID int32) (int32, error) {
 		RoundID:   roundID,
 		TrusteeID: p.trusteeState.ID,
 		Data:      data}
-	if !p.messageSender.SendToRelayWithLog(toSend, "(round "+strconv.Itoa(int(roundID))+")") {
+	info := "(round "+strconv.Itoa(int(roundID))+")"
+	if p.trusteeState.SupertrusteeEnabled && p.trusteeState.ID != 0 {
+		// for now, trustee 0 is always the supertrustee (TODO: make more flexible)
+		ok = p.messageSender.SendToTrusteeWithLog(0, toSend, info)
+	} else {
+		ok = p.messageSender.SendToRelayWithLog(toSend, info)
+	}
+	if !ok {
 		return -1, errors.New("Could not send")
 	}
 
@@ -320,5 +330,21 @@ func (p *PriFiLibTrusteeInstance) Received_REL_ALL_SECRET(msg net.REL_ALL_DISRUP
 		Secret: secret,
 		NIZK:   make([]byte, 0)}
 	p.messageSender.SendToRelayWithLog(toSend, "Sent secret to relay")
+	return nil
+}
+
+/*
+Received_TRU_REL_DC_CIPHER handles TRU_REL_DC_CIPHER messages.
+*/
+func (p *PriFiLibTrusteeInstance) Received_TRU_REL_DC_CIPHER(msg net.TRU_REL_DC_CIPHER) error {
+	log.Lvl4("Trustee " + strconv.Itoa(p.trusteeState.ID) +
+		" received ciphertext for round " + strconv.Itoa(int(msg.RoundID)) +
+		" from trustee " + strconv.Itoa(msg.TrusteeID))
+/*
+	p.relayState.roundManager.AddTrusteeCipher(msg.RoundID, msg.TrusteeID, msg.Data)
+	if p.relayState.roundManager.HasAllCiphersForCurrentRound() {
+		p.upstreamPhase1_processCiphers(true)
+	}
+*/
 	return nil
 }
