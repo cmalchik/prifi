@@ -340,6 +340,10 @@ func (p *PriFiLibTrusteeInstance) Received_TRU_REL_DC_CIPHER(msg net.TRU_REL_DC_
 	log.Lvl4("Trustee " + strconv.Itoa(p.trusteeState.ID) +
 		" received ciphertext for round " + strconv.Itoa(int(msg.RoundID)) +
 		" from trustee " + strconv.Itoa(msg.TrusteeID))
+
+	info := "(round "+strconv.Itoa(int(msg.RoundID))+")"
+	p.messageSender.SendToRelayWithLog(&msg, info) // TODO: handle sending failure
+
 /*
 	p.relayState.roundManager.AddTrusteeCipher(msg.RoundID, msg.TrusteeID, msg.Data)
 	if p.relayState.roundManager.HasAllCiphersForCurrentRound() {
