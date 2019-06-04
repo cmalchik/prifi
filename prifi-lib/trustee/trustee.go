@@ -206,7 +206,8 @@ func sendData(p *PriFiLibTrusteeInstance, roundID int32) (int32, error) {
 		TrusteeID: p.trusteeState.ID,
 		Data:      data}
 	info := "(round "+strconv.Itoa(int(roundID))+")"
-	if p.trusteeState.SupertrusteeEnabled && p.trusteeState.ID != 0 {
+	if p.trusteeState.SupertrusteeEnabled {
+		// all trustees send to the supertrustee, including the supertrustee itself
 		// for now, trustee 0 is always the supertrustee (TODO: make more flexible)
 		ok = p.messageSender.SendToTrusteeWithLog(0, toSend, info)
 	} else {
