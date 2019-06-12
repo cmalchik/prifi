@@ -91,6 +91,10 @@ func (p *PriFiLibTrusteeInstance) Received_ALL_ALL_PARAMETERS(msg net.ALL_ALL_PA
 	p.trusteeState.ClientPublicKeys = make([]kyber.Point, nClients)
 	p.trusteeState.sharedSecrets = make([]kyber.Point, nClients)
 
+	if trusteeID == 0 {
+		p.trusteeState.bufferedCiphers = make(map[int32]map[int][]byte)
+	}
+
 	if startNow {
 		// send our public key to the relay
 		p.Send_TRU_REL_PK()
@@ -342,8 +346,34 @@ func (p *PriFiLibTrusteeInstance) Received_TRU_REL_DC_CIPHER(msg net.TRU_REL_DC_
 		" received ciphertext for round " + strconv.Itoa(int(msg.RoundID)) +
 		" from trustee " + strconv.Itoa(msg.TrusteeID))
 
-	info := "(round "+strconv.Itoa(int(msg.RoundID))+")"
-	p.messageSender.SendToRelayWithLog(&msg, info) // TODO: handle sending failure
+	if p.trusteeState.bufferedCiphers[msg.RoundID] == nil {
+		p.trusteeState.bufferedCiphers[msg.RoundID] = make(map[int][]byte)
+	}
+	p.trusteeState.bufferedCiphers[msg.RoundID][msg.TrusteeID] = msg.Data
+
+	if len(p.trusteeState.bufferedCiphers[msg.RoundID]) >= p.trusteeState.nTrustees {
+		// cf. upstreamPhase2b_extractPayload() in relay.go
+		result := new(dcnet.DCNetCipher)
+		result.Payload = make([]byte, p.trusteeState.PayloadSize)
+
+		for _, s := range p.trusteeState.bufferedCiphers[msg.RoundID] {
+			c := dcnet.DCNetCipherFromBytes(s)
+			for i := range c.Payload {
+				result.Payload[i] ^= c.Payload[i]
+			}
+		}
+
+		toSend := &net.TRU_REL_DC_CIPHER{
+			RoundID:   msg.RoundID,
+			TrusteeID: p.trusteeState.ID,
+			Data:      result.ToBytes()}
+
+
+		info := "(round "+strconv.Itoa(int(msg.RoundID))+")"
+		p.messageSender.SendToRelayWithLog(toSend, info) // TODO: handle sending failure?
+
+		// TODO: if equivocation protection enabled, send sum of sigma_j's
+	}
 
 /*
 	p.relayState.roundManager.AddTrusteeCipher(msg.RoundID, msg.TrusteeID, msg.Data)
