@@ -134,7 +134,6 @@ func (p *PriFiLibRelayInstance) Received_ALL_ALL_PARAMETERS(msg net.ALL_ALL_PARA
 	p.relayState.MessageHistory = config.CryptoSuite.XOF([]byte("init")) //any non-nil, non-empty, constant array
 	p.relayState.VerifiableDCNetKeys = make([][]byte, nTrustees)
 	p.relayState.nVkeysCollected = 0
-	p.relayState.roundManager = NewBufferableRoundManager(nClients, nTrustees, windowSize)
 	p.relayState.dcNetType = dcNetType
 	p.relayState.pcapLogger = utils.NewPCAPLog()
 	p.relayState.DisruptionProtectionEnabled = disruptionProtection
@@ -143,6 +142,11 @@ func (p *PriFiLibRelayInstance) Received_ALL_ALL_PARAMETERS(msg net.ALL_ALL_PARA
 	p.relayState.blamingData = make([]int, 6)
 	p.relayState.OpenClosedSlotsRequestsRoundID = make(map[int32]bool)
 	p.relayState.SupertrusteeEnabled = supertrusteeEnabled
+	if supertrusteeEnabled {
+		p.relayState.roundManager = NewBufferableRoundManager(nClients, 1, windowSize)
+	} else {
+		p.relayState.roundManager = NewBufferableRoundManager(nClients, nTrustees, windowSize)
+	}
 
 	switch dcNetType {
 	case "Verifiable":
